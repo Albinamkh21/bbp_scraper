@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Marketplace {
+  id      Int          @id @default(autoincrement())
+  name    String       @unique
+  baseUrl String
+  
+  products   Product[]
+  sellers    Seller[]
+  tasks      SearchTask[]
+
+  @@map("marketplace")
+}
+
+model Brand {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+
+  @@map("brand")
+}
+
+model SearchTask {
+  id            Int           @id @default(autoincrement())
+  marketplace   Marketplace   @relation(fields: [marketplaceId], references: [id])
+  marketplaceId Int
+  searchType    String        // 'query', 'url', 'sku', 'category'
+  query         String
+  status        String        @default("pending")
+  createdAt     DateTime      @default(now())
+  
+  priceHistory  PriceHistory[]
+
+  @@map("search_task")
+}
+
+model Product {
+  id            Int          @id @default(autoincrement())
+  marketplace   Marketplace  @relation(fields: [marketplaceId], references: [id])
+  marketplaceId Int
+  brand         Brand        @relation(fields: [brandId], references: [id])
+  brandId       Int
+  
+  sku           String
+  url           String?
+  title         String
+  category      String?
+  reviewsCount  Int          @default(0)
+  rating        Decimal?     @db.Decimal(3, 2)
+  imageUrl      String?
+  createdAt     DateTime     @default(now())
+
+  priceHistory  PriceHistory[]
+  reviews       Review[]
+
+  @@unique([marketplaceId, sku])
+  @@map("product")
+}
+
+model Seller {
+  id            Int         @id @default(autoincrement())
+  marketplace   Marketplace @relation(fields: [marketplaceId], references: [id])
+  marketplaceId Int
+  
+  merchantId    String      // Стабильный ID из URL (напр. 30366938)
+  name          String
+  rating        Decimal?    @db.Decimal(3, 2)
+  reviewsCount  Int         @default(0)
+  phone         String?
+  createdAt     DateTime    @default(now())
+
+  priceHistory  PriceHistory[]
+
+  @@unique([marketplaceId, merchantId])
+  @@map("seller")
+}
+
+model PriceHistory {
+  id          Int        @id @default(autoincrement())
+  task        SearchTask @relation(fields: [taskId], references: [id])
+  taskId      Int
+  product     Product    @relation(fields: [productId], references: [id])
+  productId   Int
+  seller      Seller     @relation(fields: [sellerId], references: [id])
+  sellerId    Int
+  
+  price       Decimal    @db.Decimal(12, 2)
+  isAvailable Boolean    @default(true)
+  scannedAt   DateTime   @default(now())
+
+  @@map("price_history")
+}
+
+model Review {
+  id          Int      @id @default(autoincrement())
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   Int
+  
+  authorName  String?
+  rating      Int?
+  content     String?
+  publishedAt DateTime?
+  hasPhotos   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("review")
+}
