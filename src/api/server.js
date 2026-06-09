@@ -1,8 +1,11 @@
 // src/api/server.js
 const express = require('express');
 const config = require('../config/appConfig');
-const db = require('../core/Database');
+const MarketplaceRepository = require('../repositories/MarketplaceRepository');
+const TaskRepository = require('../repositories/TaskRepository');
 const { scrapingQueue } = require('../core/QueueClient');
+const { initScheduler } = require('../schedulers/sellerScheduler');
+require('../worker/sellerWorker');
 
 const app = express();
 app.use(express.json());
@@ -15,17 +18,26 @@ app.get('/api/health', (req, res) => {
 // Создание задачи на парсинг
 app.post('/api/tasks', async (req, res, next) => {
     try {
-        const { query } = req.body;
+        const { query, marketplace = 'Kaspi' } = req.body;
+        
         if (!query) {
             return res.status(400).json({ error: 'Параметр query обязателен' });
         }
 
-        // Атомарная транзакция создания задачи в Postgres (Статус по умолчанию 'pending')
-        const dbResult = await db.query(
-            'INSERT INTO search_tasks (query, status) VALUES ($1, $2) RETURNING id',
-            [query, 'pending']
-        );
-        const taskId = dbResult.rows[0].id;
+        // Динамически получаем маркетплейс и создаем задачу через Prisma
+        const baseUrl = marketplace === 'Kaspi' ? 'https://kaspi.kz' : '';
+        const mpRecord = await MarketplaceRepository.upsert({ name: marketplace, baseUrl });
+
+        const task = await TaskRepository.create({
+            marketplaceId: mpRecord.id,
+            searchType: 'query',
+            query: query
+        });
+        
+        const taskId = task.id;
+
+
+
 
         // Передача задачи в брокер Redis
         await scrapingQueue.add('scrape-job', { taskId, query }, {
@@ -45,6 +57,11 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal Server Error' });
 });
 
-app.listen(3000, () => {
+app.listen(3000, async () => {
     console.log(`[API] Сервер запущен на внутреннем порту 3000 (Хост-порт: ${config.app.port})`);
+    try {
+        await initScheduler();
+    } catch (cronError) {
+        console.error('[API ERROR] Не удалось запустить планировщик телефонов:', cronError.message);
+    }
 });

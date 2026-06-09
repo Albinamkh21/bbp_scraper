@@ -53,7 +53,7 @@ model Product {
   title         String
   category      String?
   reviewsCount  Int          @default(0)
-  rating        Decimal?     @db.Decimal(3, 2)
+  rating        Decimal?     @db.Decimal(5, 2)
   imageUrl      String?
   createdAt     DateTime     @default(now())
 
@@ -71,9 +71,10 @@ model Seller {
   
   merchantId    String      // Стабильный ID из URL (напр. 30366938)
   name          String
-  rating        Decimal?    @db.Decimal(3, 2)
+  rating        Decimal?    @db.Decimal(5, 2)
   reviewsCount  Int         @default(0)
   phone         String?
+  url           String?
   createdAt     DateTime    @default(now())
 
   priceHistory  PriceHistory[]

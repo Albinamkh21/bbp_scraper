@@ -62,6 +62,17 @@ class KaspiScraper extends BaseScraper {
     await this.delay(config.scraping.delays.productMin, config.scraping.delays.productMax);
 
     const extractedData = await page.evaluate((productUrl) => {
+
+
+      const parseRatingFromClass = (element) => {
+          if (!element) return null;
+          const classes = Array.from(element.classList);
+          const ratingClass = classes.find(c => c.startsWith('_'));
+          if (ratingClass) {
+              return parseInt(ratingClass.substring(1), 10) / 10;
+          }
+          return null;
+      };
       const productId = productUrl.match(/-(\d+)\/?$/)?.[1] || null;
       const title = document.querySelector('h1')?.textContent?.trim() || null;
       
@@ -76,28 +87,43 @@ class KaspiScraper extends BaseScraper {
       });
 
       const image = document.querySelector('img[src*="resources.cdn"]')?.src || null;
+
+      const ratingEl = document.querySelector('.item__rating [class*="_"]');
+      const rating = parseRatingFromClass(ratingEl);
+ 
       const sellers = [];
       const rows = document.querySelectorAll('tr');
 
-      for (const row of rows) {
+     for (const row of rows) {
         const cells = row.querySelectorAll('td');
         if (cells.length < 3) continue;
 
+        const mainCell = cells[0];
+        if (!mainCell) continue;
+
         let sellerName = null;
         let sellerUrl = null;
-        const links = cells[0]?.querySelectorAll('a') || [];
+        let sellerReviews = 0;
+        let sellerRating = null;
 
-        for (const link of links) {
-          if (link.href?.includes('merchant')) {
-            sellerName = link.textContent?.trim();
-            sellerUrl = link.href;
-            break;
+      const nameLink = mainCell.querySelector('a');
+      if (nameLink) {
+        sellerName = nameLink.textContent ? nameLink.textContent.trim() : null;
+        sellerUrl = nameLink.getAttribute('href') || null;
+      }
+
+      const cellText = mainCell.textContent || '';
+      const reviewMatch = cellText.match(/(\d+)\s*отзыв/i);
+      if (reviewMatch) {
+        sellerReviews = parseInt(reviewMatch[1], 10);
+      }
+
+        const ratingEl = mainCell.querySelector('.rating._seller');
+        if (ratingEl) {
+          const cls = Array.from(ratingEl.classList).find(c => c.startsWith('_') && c !== '_seller');
+          if (cls) {
+            sellerRating = parseInt(cls.substring(1), 10) / 10;
           }
-        }
-
-        if (!sellerName && links.length > 0) {
-          sellerName = links[0].textContent?.trim();
-          sellerUrl = links[0].href;
         }
 
         let price = null;
@@ -112,12 +138,18 @@ class KaspiScraper extends BaseScraper {
           }
         }
 
-        if (sellerName && price) {
-          sellers.push({ name: sellerName, url: sellerUrl, price });
-        }
+      if (sellerName && price) {
+        sellers.push({ 
+          name: sellerName, 
+          url: sellerUrl, 
+          price, 
+          rating: sellerRating, 
+          reviewsCount: sellerReviews 
+        });
       }
+    }
 
-      return { productId, title, reviewsCount, category, image, sellers };
+      return { productId, title, reviewsCount, category, image, sellers , rating };
     }, url);
 
     return {
@@ -125,6 +157,48 @@ class KaspiScraper extends BaseScraper {
       ...extractedData
     };
   }
+
+  static async parseSellerPhone(page, sellerUrl) {
+      try {
+        console.log(`[KaspiScraper] Открываем страницу: ${sellerUrl}`);
+        await page.goto(sellerUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+        console.log(`[KaspiScraper] Страница загружена, ищем элемент с телефоном...`);
+
+        // 1. Ждем появления конкретного контейнера с контактами (до 5 секунд, чтобы не виснуть)
+        const contactSelector = '.merchant-profile__contact-text';
+        try {
+          await page.waitForSelector(contactSelector, { timeout: 5000 });
+        } catch (e) {
+          console.log(`[KaspiScraper] Предупреждение: Селектор ${contactSelector} не найден на этой странице.`);
+        }
+
+        // 2. Достаем текст строго из нужного элемента
+        const phone = await page.evaluate(() => {
+          // Ищем конкретно текстовый блок телефона
+          const phoneElement = document.querySelector('.merchant-profile__contact-text');
+          if (!phoneElement) return null;
+
+          const text = phoneElement.innerText;
+          
+          // Наша регулярка, адаптированная под формат +7 (707) 300-03-30
+          const phoneMatch = text.match(/(?:\+7|8)[\s_]?\(?\d{3}\)?[\s_-]?\d{3}[\s_-]?\d{2}[\s_-]?\d{2}/);
+          return phoneMatch ? phoneMatch[0].trim() : text.trim(); // Если регулярка почему-то не совпала, вернем чистый текст элемента
+        });
+
+        console.log(`   ✓ Полученный телефон: ${phone || 'не найден'}`);
+        return phone;
+
+      } catch (error) {
+        console.error(`Ошибка при парсинге телефона по ссылке ${sellerUrl}:`, error.message);
+        return null;
+      }
+  }
+
+
+
 }
+
+
+
 
 module.exports = KaspiScraper;

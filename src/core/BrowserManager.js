@@ -6,10 +6,26 @@ chromium.use(stealth);
 
 class BrowserManager {
   async createSession() {
-    const browser = await chromium.launch({
-      headless: process.env.HEADLESS ? process.env.HEADLESS !== 'false' : config.browser.headless,
-      args: config.browser.args
-    });
+
+
+    const launchOptions = {
+        headless: process.env.HEADLESS ? process.env.HEADLESS !== 'false' : config.browser.headless,
+        args: config.browser.args
+    };
+    
+
+    if (config.proxy && config.proxy.enabled && config.proxy.server) {
+        console.log(`[BrowserManager] 🛡️ Инициализация через ПРОКСИ: ${config.proxy.server}`);
+        launchOptions.proxy = {
+            server: config.proxy.server,
+            username: config.proxy.username,
+            password: config.proxy.password
+        };
+    } else {
+        console.log('[BrowserManager] 🌐 Прокси отключен. ПРЯМОЕ подключение.');
+    }
+
+    const browser = await chromium.launch(launchOptions);
 
     const context = await browser.newContext({
       viewport: config.browser.viewport,

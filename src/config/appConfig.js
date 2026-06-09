@@ -27,6 +27,11 @@ module.exports = {
       productMax: 3000,
       iterationMin: 1000,
       iterationMax: 2000
+    },
+    schedules: {
+      // '*/1 * * * *' — означает "каждую минуту" для теста
+      // В продакшене поменяешь на '0 * * * *' (каждый час) или '0 2 * * *' (ночью в 2:00)
+      sellerPhones: process.env.SELLER_CRON || '*/10 * * * *' 
     }
   },
   app: {
@@ -46,5 +51,6 @@ module.exports = {
     username: process.env.PROXY_USERNAME || '',
     password: process.env.PROXY_PASSWORD || '',
     changeIpUrl: process.env.PROXY_CHANGE_IP_URL || ''
-  }  
+  },
+ 
 };

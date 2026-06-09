@@ -14,6 +14,7 @@ const { SCRAPING_QUEUE_NAME } = require('../core/QueueClient');
 const db = require('../core/Database');
 const ScrapingOrchestrator = require('../app/ScrapingOrchestrator');
 const KaspiScraper = require('../scrapers/KaspiScraper')
+const TaskRepository = require('../repositories/TaskRepository');
 
 console.log('[WORKER] Фоновый процесс обработки очередей успешно запущен...');
 
@@ -23,33 +24,30 @@ const worker = new Worker(SCRAPING_QUEUE_NAME, async (job) => {
 
     try {
         // 1. Переводим задачу в статус выполнения
-        await db.query('UPDATE search_tasks SET status = $1 WHERE id = $2', ['processing', taskId]);
+        await TaskRepository.updateStatus(taskId, 'processing');
 
         const scraperStrategy = new KaspiScraper();
         const orchestrator = new ScrapingOrchestrator(scraperStrategy);
         const scrapingResults = await orchestrator.run(query); // Вызов метода парсинга
 
-        // 3. Сохраняем результаты в JSONB и закрываем задачу
-        await db.query(
-            'UPDATE search_tasks SET status = $1, result = $2 WHERE id = $3',
-            ['completed', JSON.stringify(scrapingResults), taskId]
-        );
+        await TaskRepository.updateStatus(taskId, 'completed');
+
 
         console.log(`[Job ${job.id}] Таск ${taskId} успешно завершен.`);
         return scrapingResults;
-
     } catch (error) {
         console.error(`[Job ${job.id}] Критическая ошибка при обработке таска ${taskId}:`, error);
 
         // Если лимит попыток исчерпан — фиксируем финальный сбой в БД
         if (job.attemptsMade >= job.opts.attempts) {
-            await db.query(
-                'UPDATE search_tasks SET status = $1, error_message = $2 WHERE id = $3',
-                ['failed', error.message, taskId]
-            );
+            try {
+                await TaskRepository.updateStatus(taskId, 'failed');
+              
+                console.log(`[Job ${job.id}] Таск ${taskId} помечен как failed.`);
+            } catch (dbError) {
+                console.error(`[Job ${job.id}] Не удалось обновить статус ошибки в БД:`, dbError);
+            }
         }
-        
-        throw error; // Пробрасываем ошибку дальше для корректной работы механики ретраев BullMQ
     }
 }, {
     connection: { url: config.redis.url },
