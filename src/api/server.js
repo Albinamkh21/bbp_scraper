@@ -7,6 +7,8 @@ const { scrapingQueue } = require('../core/QueueClient');
 const { initScheduler } = require('../schedulers/sellerScheduler');
 require('../worker/sellerWorker');
 
+const historyRouter = require('./routes/searchHistory');
+
 const app = express();
 app.use(express.json());
 
@@ -15,7 +17,8 @@ app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date() });
 });
 
-// Создание задачи на парсинг
+app.use('/api/history', historyRouter);
+
 app.post('/api/tasks', async (req, res, next) => {
     try {
         const { query, marketplace = 'Kaspi' } = req.body;

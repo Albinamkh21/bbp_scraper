@@ -20,6 +20,39 @@ class PriceHistoryRepository {
       orderBy: { scannedAt: 'desc' }
     });
   }
+  
+  async getProductsByTaskId(taskId) {
+       
+        const historyRecords = await prisma.priceHistory.findMany({
+            where: { taskId: parseInt(taskId, 10) },
+            distinct: ['productId'],
+            include: {
+                product: true
+            }
+        });
+
+     
+        return historyRecords.map(record => record.product).filter(Boolean);
+    }
+
+ 
+  async getSellersByTaskAndProduct(taskId, productId) {
+        return await prisma.priceHistory.findMany({
+            where: {
+                taskId: parseInt(taskId, 10),
+                productId: parseInt(productId, 10)
+            },
+            include: {
+                seller: true // Подтягиваем данные продавца (имя, телефон, рейтинг)
+            },
+            orderBy: {
+                price: 'asc' // Сразу сортируем от дешевых к дорогим
+            }
+        });
+    }
+
+
+
 }
 
 module.exports = new PriceHistoryRepository();

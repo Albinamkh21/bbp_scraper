@@ -15,7 +15,7 @@ const browserManager = new BrowserManager();
 const sellerWorker = new Worker('seller-details-queue', async (job) => {
   console.log(`[Seller Worker] Старт проверки продавцов по расписанию. Job ID: ${job.id}`);
 
-  const sellersToUpdate = await SellerRepository.findWithoutPhone(1);
+  const sellersToUpdate = await SellerRepository.findWithoutPhone(10);
 
   if (sellersToUpdate.length === 0) {
     console.log('[Seller Worker] Все продавцы уже имеют телефоны. Отдыхаем.');

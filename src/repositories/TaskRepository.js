@@ -25,6 +25,15 @@ class TaskRepository {
       where: { id }
     });
   }
+
+  async findAll(tx = prisma) {
+    return await tx.searchTask.findMany({
+      orderBy: {
+        createdAt: 'desc' // Сначала показываем самые последние запуски
+      }
+    });
+  }
 }
+
 
 module.exports = new TaskRepository();
