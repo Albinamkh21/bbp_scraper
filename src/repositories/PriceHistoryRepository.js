@@ -43,7 +43,7 @@ class PriceHistoryRepository {
                 productId: parseInt(productId, 10)
             },
             include: {
-                seller: true, // Подтягиваем данные продавца (имя, телефон, рейтинг)
+                seller: true, 
                 product:{
                   include: {
                     marketplace: true 
