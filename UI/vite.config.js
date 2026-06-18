@@ -5,15 +5,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 5173,
+    port: 5174,
     proxy: {
       '/api': {
-        target: 'http://app:8000',
+        target: 'http://bbp_api:3000',
         changeOrigin: true,
         ws:false,
       },
       '/ws': {
-        target: 'ws://app:8000',
+        target: 'ws://bbp_api:3000',
         ws: true, 
       },
     },

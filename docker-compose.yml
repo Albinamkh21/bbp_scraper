@@ -84,6 +84,23 @@ services:
       bbp_redis:
         condition: service_started
 
+  bbp_ui:
+    build:
+      context: ./UI
+      dockerfile: Dockerfile
+    container_name: bbp_ui
+    ports:
+      - "5174:5174" 
+    volumes:
+      - ./UI:/app
+      - /app/node_modules
+    networks:
+      - bbp-network  
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - bbp_api      
+
 volumes:
   bbp-db-data:
 

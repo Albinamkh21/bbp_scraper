@@ -20,9 +20,9 @@ const getInitialFilters = () => {
   return { name: '', status: '' };
 };
 
-export const TracksPage = ({ onTaskClick }) => {
+export const TasksPage = ({ onTaskClick }) => {
   const { loading, fetchTasksData } = useTasks();
-  const [view, setView] = useState('tasks'); // 'tasks', 'products', 'sellers'
+  const [view, setView] = useState('tasks'); 
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filters, setFilters] = useState(getInitialFilters);
@@ -63,11 +63,12 @@ export const TracksPage = ({ onTaskClick }) => {
               fetchTasks={fetchTasksData} 
               filters={filters}
               searchTrigger={searchTrigger}
-              onProductClick={(task) => {
-                setSelectedTask(task);
-                setView('products');
-              }} 
-              onTaskClick={onTaskClick} 
+              onProductClick={(task) => { }} 
+              onTaskClick={(taskId) => {
+             
+              setSelectedTask({ id: taskId }); 
+              setView('products');
+            }} 
             />
           </div>
         </>

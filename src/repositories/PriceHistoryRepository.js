@@ -43,10 +43,14 @@ class PriceHistoryRepository {
                 productId: parseInt(productId, 10)
             },
             include: {
-                seller: true // Подтягиваем данные продавца (имя, телефон, рейтинг)
+                seller: true, // Подтягиваем данные продавца (имя, телефон, рейтинг)
+                product:{
+                  include: {
+                    marketplace: true 
+                }}
             },
             orderBy: {
-                price: 'asc' // Сразу сортируем от дешевых к дорогим
+                price: 'asc' 
             }
         });
     }

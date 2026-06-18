@@ -209,14 +209,14 @@
   z-index: 20;
 }
 
-/* ── Track title link in grid ── */
-.track-title-link {
+/* ── Task title link in grid ── */
+.task-title-link {
   color: #1890ff;
   cursor: pointer;
   font-weight: 500;
 }
 
-.track-title-link:hover {
+.task-title-link:hover {
   text-decoration: underline;
 }
 
