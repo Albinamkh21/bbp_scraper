@@ -1,7 +1,7 @@
 // src/components/Layout/MainLayout.jsx
 import React from 'react';
 
-export function MainLayout({ children, currentPage, onMenuClick }) {
+export function MainLayout({ children, currentPage, onMenuClick, user, onLogout }) {
   // Проверяем, активен ли раздел Треков (включая детализацию)
   const isTracksActive = ['list', 'track', 'person'].includes(currentPage);
   const isCatalogActive = currentPage === 'catalog';
@@ -12,6 +12,12 @@ export function MainLayout({ children, currentPage, onMenuClick }) {
     <div className="app-minimal">
       <aside className="sidebar">
         <div className="sidebar-title">Music Archive</div>
+        {user && (
+          <div className="user-info">
+            <div className="user-name">{user.email}</div>
+            <button className="btn-logout" onClick={onLogout}>Выход</button>
+          </div>
+        )}
         <nav className="nav-menu">
           {/* Используем обычные кнопки вместо NavLink */}
           <button 

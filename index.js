@@ -1,6 +1,7 @@
 const ScrapingOrchestrator = require('./src/app/ScrapingOrchestrator');
 const KaspiScraper = require('./src/scrapers/KaspiScraper');
 const config = require('./src/config/appConfig');
+const authRouter = require('./api/routes/auth');
 
 async function main() {
 

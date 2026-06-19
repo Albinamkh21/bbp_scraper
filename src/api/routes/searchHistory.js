@@ -1,9 +1,11 @@
 // src/api/searchHistory.js
 const express = require('express');
 const router = express.Router();
-    const HistoryRepository = require('../../repositories/PriceHistoryRepository');
-    const TaskRepository = require('../../repositories/TaskRepository');
+const HistoryRepository = require('../../repositories/PriceHistoryRepository');
+const TaskRepository = require('../../repositories/TaskRepository');
+const { protect } = require('../../middlewares/auth.middleware');
 
+router.use(protect);
 
 
 router.get('/tasks', async (req, res, next) => {

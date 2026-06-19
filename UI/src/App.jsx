@@ -1,14 +1,47 @@
 // src/App.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MainLayout } from './components/Layout/MainLayout';
 import { TasksPage } from './features/tasks/TasksPage';
 import { CatalogPage } from './features/catalog/CatalogPage';
 import { ReportPage } from './features/report/ReportPage';
 import { CreateReportPage } from './features/report/CreateReportPage';
+import { AuthPage } from './features/auth/AuthPage';
+import { httpClient } from './api/httpClient';
 import './assets/style/minimal.css';
 
 function App() {
   const [page, setPage] = useState({ type: 'list' });
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Проверяем аутентификацию при загрузке
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    const savedUser = localStorage.getItem('user');
+    
+    if (token && savedUser) {
+      httpClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(JSON.parse(savedUser));
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
+  }, []);
+
+  const handleAuthSuccess = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    setPage({ type: 'list' });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    delete httpClient.defaults.headers.common['Authorization'];
+    setUser(null);
+    setIsAuthenticated(false);
+    setPage({ type: 'list' });
+  };
 
   const goToCatalog = () => setPage({ type: 'catalog', prev: page });
   const goToReport = () => setPage({ type: 'report', prev: page });
@@ -23,8 +56,21 @@ function App() {
     }
   };
 
+  if (loading) {
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>Загрузка...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+  }
+
   return (
-    <MainLayout currentPage={page.type} onMenuClick={(mod) => mod === 'catalog' ? goToCatalog() : (mod === 'report' ? goToReport() : (mod === 'createReport' ? goToCreateReport() : goToTasks()))}>
+    <MainLayout 
+      currentPage={page.type} 
+      onMenuClick={(mod) => mod === 'catalog' ? goToCatalog() : (mod === 'report' ? goToReport() : (mod === 'createReport' ? goToCreateReport() : goToTasks()))}
+      user={user}
+      onLogout={handleLogout}
+    >
       
       {page.type === 'catalog' && (
         <CatalogPage />
