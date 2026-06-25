@@ -131,6 +131,9 @@ model User {
   name                String?              
   roleId              Int                  @map("role_id")
   role                Role                 @relation(fields: [roleId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  isVerified        Boolean  @default(false)
+  verificationToken String?  // Токен для ссылки (nullable)
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
   createdAt           DateTime             @default(now()) @map("created_at")

@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { httpClient } from '../../api/httpClient';
 import './auth.css';
 
-export function AuthPage({ onAuthSuccess }) {
+export function AuthPage({ onAuthSuccess, onShowForgot }) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Расширили стейт полями confirmPassword и nickname (ловушка)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: ''
+    password: '',
+    confirmPassword: '',
+    nickname: '' // Honeypot-поле
   });
 
   const handleInputChange = (e) => {
@@ -35,7 +38,8 @@ export function AuthPage({ onAuthSuccess }) {
     setSuccess('');
 
     try {
-      if (!formData.name || !formData.email || !formData.password) {
+      // Базовая проверка на заполнение обязательных полей
+      if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
         throw new Error('Пожалуйста, заполните все поля');
       }
 
@@ -47,14 +51,22 @@ export function AuthPage({ onAuthSuccess }) {
         throw new Error('Пароль должен быть не менее 6 символов');
       }
 
+      // Валидация совпадения паролей перед отправкой на сервер
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Пароли не совпадают');
+      }
+
+      // Отправляем данные, включая скрытое поле nickname
       const response = await httpClient.post('/auth/register', {
         name: formData.name,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+        nickname: formData.nickname // Бэкенд проверит: если тут есть текст, то это бот
       });
 
       setSuccess('Регистрация успешна! Теперь войдите в свой аккаунт');
-      setFormData({ name: '', email: '', password: '' });
+      setFormData({ name: '', email: '', password: '', confirmPassword: '', nickname: '' });
       setTimeout(() => {
         setIsLogin(true);
       }, 1500);
@@ -87,15 +99,13 @@ export function AuthPage({ onAuthSuccess }) {
 
       const { accessToken, user } = response.data;
       
-      // Сохраняем токен и данные пользователя
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('user', JSON.stringify(user));
 
-      // Устанавливаем токен в заголовок по умолчанию
       httpClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
       setSuccess('Вы успешно вошли!');
-      setFormData({ name: '', email: '', password: '' });
+      setFormData({ name: '', email: '', password: '', confirmPassword: '', nickname: '' });
       
       setTimeout(() => {
         onAuthSuccess(user);
@@ -122,6 +132,21 @@ export function AuthPage({ onAuthSuccess }) {
         </div>
 
         <form onSubmit={isLogin ? handleLogin : handleRegister} className="auth-form">
+          
+          {/* --- НЕВИДИМАЯ ЛОВУШКА ДЛЯ БОТОВ (HONEYPOT) --- */}
+          {/* Реальный человек его не видит и не может сфокусироваться, а бот обязательно заполнит */}
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <input
+              type="text"
+              name="nickname"
+              tabIndex="-1"
+              autoComplete="off"
+              value={formData.nickname}
+              onChange={handleInputChange}
+            />
+          </div>
+          {/* ----------------------------------------------- */}
+
           {!isLogin && (
             <div className="form-group-auth">
               <label className="form-label-auth">Имя</label>
@@ -163,6 +188,22 @@ export function AuthPage({ onAuthSuccess }) {
             />
           </div>
 
+          {/* Дополнительное поле подтверждения пароля при регистрации */}
+          {!isLogin && (
+            <div className="form-group-auth">
+              <label className="form-label-auth">Подтвердите пароль</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                className="form-control-auth"
+                placeholder="••••••••"
+                disabled={loading}
+              />
+            </div>
+          )}
+
           {error && <div className="auth-error">{error}</div>}
           {success && <div className="auth-success">{success}</div>}
 
@@ -175,6 +216,26 @@ export function AuthPage({ onAuthSuccess }) {
               ? (isLogin ? 'Вход...' : 'Регистрация...') 
               : (isLogin ? 'Войти' : 'Зарегистрироваться')}
           </button>
+
+          {isLogin && (
+            <button
+              type="button"
+              className="btn auth-link-btn"
+              onClick={onShowForgot}
+              disabled={loading}
+              style={{
+                marginTop: '12px',
+                background: 'transparent',
+                border: 'none',
+                color: '#2563eb',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: 0
+              }}
+            >
+              Забыли пароль?
+            </button>
+          )}
         </form>
 
         <div className="auth-footer">
@@ -186,7 +247,7 @@ export function AuthPage({ onAuthSuccess }) {
                 setIsLogin(!isLogin);
                 setError('');
                 setSuccess('');
-                setFormData({ name: '', email: '', password: '' });
+                setFormData({ name: '', email: '', password: '', confirmPassword: '', nickname: '' });
               }}
               className="auth-toggle-btn"
               disabled={loading}

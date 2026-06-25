@@ -6,11 +6,26 @@ import { CatalogPage } from './features/catalog/CatalogPage';
 import { ReportPage } from './features/report/ReportPage';
 import { CreateReportPage } from './features/report/CreateReportPage';
 import { AuthPage } from './features/auth/AuthPage';
+import { ForgotPassword } from './features/auth/ForgotPassword';
+import { ResetPassword } from './features/auth/ResetPassword';
+// === ИМПОРТИРУЕМ КОМПОНЕНТ ВЕРИФИКАЦИИ (проверь путь к файлу!) ===
+import { VerifyEmail } from './features/auth/VerifyEmail'; 
 import { httpClient } from './api/httpClient';
 import './assets/style/minimal.css';
 
 function App() {
-  const [page, setPage] = useState({ type: 'list' });
+  // === ИНИЦИАЛИЗАЦИЯ: Если в URL есть токен, сразу открываем верификацию ===
+  const [page, setPage] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('token')) {
+      return { type: 'verify', token: params.get('token') };
+    }
+    if (params.has('resetToken')) {
+      return { type: 'reset', token: params.get('resetToken') };
+    }
+    return { type: 'list' };
+  });
+
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -60,8 +75,34 @@ function App() {
     return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>Загрузка...</div>;
   }
 
+  // ===================================================================
+  // ЭТАП СДЕЛАЛИ ПУБЛИЧНЫМ: Если тип страницы verify, рендерим её В ОБХОД авторизации
+  // ===================================================================
+  if (page.type === 'verify') {
+    return (
+      <VerifyEmail 
+        token={page.token} 
+        onComplete={() => setPage({ type: 'list' })} 
+      />
+    );
+  }
+
+  if (page.type === 'reset') {
+    return (
+      <ResetPassword 
+        token={page.token} 
+        onComplete={() => setPage({ type: 'list' })} 
+      />
+    );
+  }
+
+  if (page.type === 'forgot') {
+    return <ForgotPassword onBack={() => setPage({ type: 'list' })} />;
+  }
+
+  // Закрытая зона: сюда не пустит без логина (но верификация теперь выше, так что ей всё равно)
   if (!isAuthenticated) {
-    return <AuthPage onAuthSuccess={handleAuthSuccess} />;
+    return <AuthPage onAuthSuccess={handleAuthSuccess} onShowForgot={() => setPage({ type: 'forgot' })} />;
   }
 
   return (

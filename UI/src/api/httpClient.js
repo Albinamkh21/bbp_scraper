@@ -32,3 +32,8 @@ httpClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const publicClient = axios.create({
+  baseURL: `/api`,
+  headers: { 'Content-Type': 'application/json' },
+});
