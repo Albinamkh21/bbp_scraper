@@ -2,7 +2,7 @@ require('dotenv').config();
 
 module.exports = {
   browser: {
-    headless: true,
+    headless: false, 
     viewport: { width: 1400, height: 900 },
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     locale: 'ru-RU',
@@ -15,7 +15,11 @@ module.exports = {
     ]
   },
   scraping: {
-    defaultQuery: 'apple iphone 15',
+
+    baseUrl: 'https://kaspi.kz/shop/',
+    defaultQuery: 'Кресло IKEA Страндмон',
+    maxItems: 15,
+    searchType: 'query',
     timeouts: {
       navigation: 60000,
       selector: 30000
@@ -31,7 +35,7 @@ module.exports = {
     schedules: {
       // '*/1 * * * *' — означает "каждую минуту" для теста
       // В продакшене поменяешь на '0 * * * *' (каждый час) или '0 2 * * *' (ночью в 2:00)
-      sellerPhones: process.env.SELLER_CRON || '0 2 * * *' 
+      sellerPhones: process.env.SELLER_CRON || '*/5 * * * *'
     }
   },
   app: {

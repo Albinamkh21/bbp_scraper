@@ -1,32 +1,39 @@
-// /app/src/schedulers/sellerScheduler.js
 const { Queue } = require('bullmq');
-const IORedis = require('ioredis'); // Добавляем ioredis напрямую
+const IORedis = require('ioredis');
 const config = require('../config/appConfig');
+const redisConnection = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
+const { sellerQueue } = require('../core/QueueClient');
 
-// Создаем подключение строго по REDIS_URL из окружения Docker
-const redisConnection = new IORedis(process.env.REDIS_URL, {
-  maxRetriesPerRequest: null
-});
 
-const sellerQueue = new Queue('seller-details-queue', { 
-  connection: redisConnection 
-});
+
 
 async function initScheduler() {
-  console.log('[Scheduler] Проверяем расписание в Redis...');
-  
-  const repeatableJobs = await sellerQueue.getRepeatableJobs();
-  for (const job of repeatableJobs) {
-    await sellerQueue.removeRepeatableByKey(job.key);
-  }
+    console.log('[Scheduler] Синхронизация расписания...');
+    
+    const cronExpression = config.scraping.schedules.sellerPhones;
+    
+    // 1. Получаем все существующие повторяющиеся задачи
+    const repeatableJobs = await sellerQueue.getRepeatableJobs();
+    
+    // 2. Проверяем, есть ли уже задача с таким кроном
+    const exists = repeatableJobs.some(job => job.cron === cronExpression);
+    
+    if (exists) {
+        console.log('[Scheduler] Задача уже в расписании, ничего менять не нужно.');
+        return;
+    }
 
-  const cronExpression = config.scraping.schedules.sellerPhones;
+    // 3. Если задачи нет (или крон изменился), очищаем старые и добавляем новую
+    for (const job of repeatableJobs) {
+        await sellerQueue.removeRepeatableByKey(job.key);
+    }
 
-  await sellerQueue.add('sync-seller-phones', {}, {
-    repeat: { cron: cronExpression }
-  });
-  
-  console.log(`[Scheduler] Задачник телефонов запущен по расписанию: "${cronExpression}"`);
+   await sellerQueue.add('sync-seller-phones', {}, {
+        repeat: { 
+            cron: cronExpression 
+        }
+    })
+    
+    console.log(`[Scheduler] Расписание обновлено: "${cronExpression}"`);
 }
-
-module.exports = { initScheduler, sellerQueue };
+module.exports = { initScheduler };

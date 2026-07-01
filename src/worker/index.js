@@ -19,7 +19,7 @@ const TaskRepository = require('../repositories/TaskRepository');
 console.log('[WORKER] Фоновый процесс обработки очередей успешно запущен...');
 
 const worker = new Worker(SCRAPING_QUEUE_NAME, async (job) => {
-    const { taskId, query } = job.data;
+    const { taskId, query, maxItems, searchType } = job.data;
     console.log(`[Job ${job.id}] Взят в работу таск ${taskId} с поисковым запросом: "${query}"`);
 
     try {
@@ -28,7 +28,7 @@ const worker = new Worker(SCRAPING_QUEUE_NAME, async (job) => {
 
         const scraperStrategy = new KaspiScraper();
         const orchestrator = new ScrapingOrchestrator(scraperStrategy);
-        const scrapingResults = await orchestrator.run(query); // Вызов метода парсинга
+        const scrapingResults = await orchestrator.run(query, maxItems, searchType, taskId);
 
         await TaskRepository.updateStatus(taskId, 'completed');
 

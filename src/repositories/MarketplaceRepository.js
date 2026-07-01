@@ -17,4 +17,4 @@ class MarketplaceRepository {
   }
 }
 
-module.exports = new MarketplaceRepository();
+module.exports =  new MarketplaceRepository();

@@ -3,7 +3,7 @@ const AnalyticsService = require('../services/AnalyticsService');
 const config = require('../config/appConfig');
 
 // Подключаем репозиторий задач и сервис сохранения данных
-const MarketplaceRepository = require('../repositories/MarketplaceRepository');
+
 const TaskRepository = require('../repositories/TaskRepository');
 const ScrapingDataService = require('../services/ScrapingDataService');
 
@@ -13,28 +13,25 @@ class ScrapingOrchestrator {
     this.browserManager = new BrowserManager();
   }
 
-  async run(searchQuery) {
+  async run(searchQuery, maxItems = 100, searchType = 'query', taskId = null) {
     console.log(`[Orchestrator] Старт транзакции автоматизации для: "${searchQuery}"`);
     
     const globalReport = [];
     let browserInstance = null;
     let task = null;
 
-    // Автоматически определяем имя маркетплейса из названия класса скрапера 
-    // (например: KaspiScraper -> "kaspi")
+
     const marketplaceName = this.scraper.constructor.name.replace('Scraper', '').toLowerCase() || 'kaspi';
     const baseUrl = marketplaceName === 'kaspi' ? 'https://kaspi.kz' : '';
 
     try {
-      // 1. Инициализируем маркетплейс и создаем задачу со статусом "pending"
-      const marketplace = await MarketplaceRepository.upsert({ name: marketplaceName, baseUrl });
-      task = await TaskRepository.create({
-        marketplaceId: marketplace.id,
-        searchType: 'query', // По умолчанию текстовый поиск
-        query: searchQuery
-      });
 
-      // Переводим задачу в статус "processing"
+      let task;
+   
+
+       task = { id: taskId };
+
+   
       await TaskRepository.updateStatus(task.id, 'processing');
 
       // 2. Запуск браузерной сессии
@@ -42,11 +39,11 @@ class ScrapingOrchestrator {
       browserInstance = browser; // Сохраняем ссылку для блока finally
 
       // Поиск ссылок
-      const urls = await this.scraper.search(page, searchQuery);
+      const urls = await this.scraper.search(page, searchQuery, maxItems);
       console.log(`[Orchestrator] Получено ${urls.length} ссылок для обработки.`);
 
       // Обход ссылок urls.length
-      for (let i = 0; i < 1; i++) {
+      for (let i = 0; i < urls.length; i++) {
         const url = urls[i];
         console.log(`\n[Orchestrator] [Обработка ${i + 1}/${urls.length}] Ссылка: ${url}`);
 

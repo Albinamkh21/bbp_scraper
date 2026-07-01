@@ -70,7 +70,7 @@ services:
       dockerfile: Dockerfile
     container_name: bbp_worker
     restart: always
-    command: sh -c "xvfb-run -a --server-args='-screen 0 1280x1024x24' node src/worker/index.js"
+    command: sh -c "xvfb-run -a --server-args='-screen 0 1280x1024x24' node src/worker/main.js"
     volumes:
       - .:/app
       - /app/node_modules
