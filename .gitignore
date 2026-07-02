@@ -3,7 +3,7 @@
 .env
 
 .cursor
-.logs
+/logs
 
 # dependencies
 /node_modules

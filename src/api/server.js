@@ -36,7 +36,7 @@ app.use((err, req, res, next) => {
 app.listen(3000, async () => {
     console.log(`[API] Сервер запущен на внутреннем порту 3000 (Хост-порт: ${config.app.port})`);
     try {
-        await initScheduler();
+        //await initScheduler();
     } catch (cronError) {
         console.error('[API ERROR] Не удалось запустить планировщик телефонов:', cronError.message);
     }

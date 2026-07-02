@@ -3,13 +3,16 @@ const prisma = new PrismaClient();
 
 class PriceHistoryRepository {
   async create(data, tx = prisma) {
+    console.log('[PriceHistoryRepository] Создаем запись истории цены:', data.productId, data.deliveryInfo );
     return await tx.priceHistory.create({
       data: {
         taskId: data.taskId,
         productId: data.productId,
         sellerId: data.sellerId,
         price: data.price,
-        isAvailable: data.isAvailable ?? true
+        isAvailable: data.isAvailable ?? true,
+        deliveryRaw: data.deliveryInfo || null,
+        deliveryDays: data.deliveryDays || null
       }
     });
   }

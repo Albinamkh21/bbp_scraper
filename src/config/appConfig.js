@@ -35,7 +35,9 @@ module.exports = {
     schedules: {
       // '*/1 * * * *' — означает "каждую минуту" для теста
       // В продакшене поменяешь на '0 * * * *' (каждый час) или '0 2 * * *' (ночью в 2:00)
-      sellerPhones: process.env.SELLER_CRON || '*/5 * * * *'
+      sellerPhones: process.env.SELLER_CRON || '0 /2 * * *',
+      sellersPerBatch: 15,
+      requestDelay: 5000
     }
   },
   app: {

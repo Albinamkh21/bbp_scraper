@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 class ProductRepository {
   async upsert(data, tx = prisma) {
-    console.log(`[ProductRepository] Сохраняем продукт SKU: ${data.sku}, Рейтинг: ${data.rating}, Отзывы: ${data.reviewsCount}`);
+   console.log(`[ProductRepository] Сохраняем продукт SKU: ${data.sku}, Рейтинг: ${data.rating}, Отзывы: ${data.reviewsCount}, rawCategories: ${data.rawCategories ? data.rawCategories.join(' > ') : 'N/A'}`);
     
     try {
       return await tx.product.upsert({
@@ -16,7 +16,9 @@ class ProductRepository {
         update: {
           url: data.url,
           title: data.title,
-          category: data.category,
+         
+          rawCategories: data.rawCategories || [], 
+          categoryId: data.categoryId !== undefined ? data.categoryId : undefined,
           reviewsCount: data.reviewsCount,
           rating: data.rating,
           imageUrl: data.imageUrl
@@ -27,18 +29,20 @@ class ProductRepository {
           sku: data.sku,
           url: data.url,
           title: data.title,
-          category: data.category,
+
+          rawCategories: data.rawCategories || [], 
+      
+          categoryId: data.categoryId || null,
           reviewsCount: data.reviewsCount,
           rating: data.rating,
           imageUrl: data.imageUrl
         }
       });
-  } catch (error) {
-
+    } catch (error) {
       console.error(`[ProductRepository ERROR] Не удалось сохранить ${data.sku}:`, error.message);
       throw error;
     }
-}
+  }
 
   async findBySku(marketplaceId, sku, tx = prisma) {
     return await tx.product.findUnique({

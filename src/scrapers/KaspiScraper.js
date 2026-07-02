@@ -136,7 +136,7 @@ class KaspiScraper extends BaseScraper {
     await page.waitForSelector('h1', { timeout: config.scraping.timeouts.selector });
     await this.delay(config.scraping.delays.productMin, config.scraping.delays.productMax);
 
-    // 1. Единожды извлекаем базовые данные о товаре (твой оригинальный код)
+   
     const baseData = await page.evaluate((productUrl) => {
       const parseRatingFromClass = (element) => {
           if (!element) return null;
@@ -166,19 +166,32 @@ class KaspiScraper extends BaseScraper {
       //const reviewsMatch = document.body.innerText.match(/\((\d+)\s*отзыв/i);
       //const reviewsCount = reviewsMatch ? parseInt(reviewsMatch[1], 10) : null;
 
-      let category = null;
-      document.querySelectorAll('a').forEach(link => {
-        if (link.href?.includes('/shop/c/') || link.href?.includes('/c/')) {
-          category = link.textContent?.trim();
-        }
-      });
+    
+   
+     
+     const categoryElements = document.querySelectorAll('.breadcrumbs a.breadcrumbs__item');
+      
+      // 2. Извлекаем чистый текст и сразу превращаем в массив строк
+      const categoriesList = Array.from(categoryElements).map(el => el.innerText.trim());
+      
+    
+      const rawCategories = categoriesList.filter(text => {
+          const lower = text.toLowerCase();
+          return text.length > 0 && 
+                !lower.includes('магазин') && 
+                !lower.includes('каспи') && 
+                !lower.includes('главная');
+      });     
+
+    
+
 
       const image = document.querySelector('img[src*="resources.cdn"]')?.src || null;
 
       const ratingEl = document.querySelector('.item__rating [class*="_"]');
       const rating = parseRatingFromClass(ratingEl);
 
-      return { productId, title, reviewsCount, category, image, rating };
+      return { productId, title, reviewsCount, rawCategories, image, rating };
     }, url);
 
     // 2. Цикл для сбора продавцов с учетом пагинации
@@ -186,7 +199,7 @@ class KaspiScraper extends BaseScraper {
     let hasNextPage = true;
 
     while (hasNextPage) {
-      // Извлекаем продавцов с текущей страницы (твоя оригинальная логика)
+    
       const pageSellers = await page.evaluate(() => {
         const sellers = [];
         const rows = document.querySelectorAll('tr');
@@ -208,6 +221,7 @@ class KaspiScraper extends BaseScraper {
             sellerName = nameLink.textContent ? nameLink.textContent.trim() : null;
             sellerUrl = nameLink.getAttribute('href') || null;
           }
+          console.log(`[KaspiScraper 11] sellerName": ${sellerName}`);
 
           const cellText = mainCell.textContent || '';
           const reviewMatch = cellText.match(/(\d+)\s*отзыв/i);
@@ -222,19 +236,26 @@ class KaspiScraper extends BaseScraper {
               sellerRating = parseInt(cls.substring(1), 10) / 10;
             }
           }
-
           let price = null;
           for (const cell of cells) {
             const text = cell.textContent || '';
             const prices = text.replace(/\s/g, '').match(/(\d+)₸/g) || [];
             for (const p of prices) {
               const val = parseInt(p.replace('₸', ''), 10);
-              // Оставляем твою логику отсеивания
               if (val > 10000 && (!price || val > price)) {
                 price = val;
               }
             }
           }
+        let deliveryInfo = 'Нет данных'; 
+        const deliveryCell = cells[2];
+        if (deliveryCell) {
+            const options = Array.from(deliveryCell.querySelectorAll('.sellers-table__delivery-cell-option'));
+            if (options.length > 0) {
+               
+                deliveryInfo = options.map(opt => opt.innerText.trim().replace(/\s+/g, ' ')).join(' | ');
+            }
+        }
 
           if (sellerName && price) {
             sellers.push({ 
@@ -242,7 +263,8 @@ class KaspiScraper extends BaseScraper {
               url: sellerUrl, 
               price, 
               rating: sellerRating, 
-              reviewsCount: sellerReviews 
+              reviewsCount: sellerReviews,
+              deliveryInfo: deliveryInfo
             });
           }
         }
@@ -252,7 +274,7 @@ class KaspiScraper extends BaseScraper {
       // Добавляем собранных продавцов в общий массив
       allSellers.push(...pageSellers);
 
-      // Ищем кнопку "Следующая" и кликаем, если она активна
+    
       hasNextPage = await page.evaluate(() => {
         // Ищем все элементы пагинации на странице
         const paginationEls = Array.from(document.querySelectorAll('.pagination__el'));

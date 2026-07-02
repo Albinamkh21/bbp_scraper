@@ -5,6 +5,7 @@ const BrowserManager = require('../core/BrowserManager');
 const SellerRepository = require('../repositories/SellerRepository'); 
 const KaspiScraper = require('../scrapers/KaspiScraper'); 
 const { sellerQueue, SELLER_QUEUE_NAME } = require('../core/QueueClient');
+const config = require('../config/appConfig');
 
 // Чистое инлайн-подключение без лишних файлов
 const redisConnection = new IORedis(process.env.REDIS_URL, {
@@ -16,7 +17,8 @@ const browserManager = new BrowserManager();
 const sellerWorker = new Worker(SELLER_QUEUE_NAME, async (job) => {
   console.log(`[Seller Worker] Старт проверки продавцов по расписанию. Job ID: ${job.id}`);
 
-  const sellersToUpdate = await SellerRepository.findWithoutPhone(50);
+  const batchSize = config.scraping.schedules.sellersPerBatch || 15;
+  const sellersToUpdate = await SellerRepository.findWithoutPhone(batchSize);
 
   if (sellersToUpdate.length === 0) {
     console.log('[Seller Worker] Все продавцы уже имеют телефоны. Отдыхаем.');
@@ -52,7 +54,8 @@ const sellerWorker = new Worker(SELLER_QUEUE_NAME, async (job) => {
 
 
 }, { connection: redisConnection,
-    concurrency: 1  
+    concurrency: 1  ,
+    lockDuration: 600000
  });
 
 module.exports = sellerWorker;

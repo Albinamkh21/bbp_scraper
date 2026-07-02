@@ -8,9 +8,9 @@ datasource db {
 }
 
 model Marketplace {
-  id      Int          @id @default(autoincrement())
-  name    String       @unique
-  baseUrl String
+  id      Int       @id @default(autoincrement()) @map("id")
+  name    String    @unique @map("name")
+  baseUrl String    @map("base_url")
   
   products   Product[]
   sellers    Seller[]
@@ -20,21 +20,21 @@ model Marketplace {
 }
 
 model Brand {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
+  id       Int       @id @default(autoincrement()) @map("id")
+  name     String    @unique @map("name")
   products Product[]
 
   @@map("brand")
 }
 
 model SearchTask {
-  id            Int           @id @default(autoincrement())
-  marketplace   Marketplace   @relation(fields: [marketplaceId], references: [id])
-  marketplaceId Int
-  searchType    String        // 'query', 'url', 'sku', 'category'
-  query         String
-  status        String        @default("pending")
-  createdAt     DateTime      @default(now())
+  id            Int            @id @default(autoincrement()) @map("id")
+  marketplace   Marketplace    @relation(fields: [marketplaceId], references: [id])
+  marketplaceId Int            @map("marketplace_id")
+  searchType    String         @map("search_type") // 'query', 'url', 'sku', 'category'
+  query         String         @map("query")
+  status        String         @default("pending") @map("status")
+  createdAt     DateTime       @default(now()) @map("created_at")
   
   priceHistory  PriceHistory[]
 
@@ -42,20 +42,24 @@ model SearchTask {
 }
 
 model Product {
-  id            Int          @id @default(autoincrement())
+  id            Int          @id @default(autoincrement()) @map("id")
   marketplace   Marketplace  @relation(fields: [marketplaceId], references: [id])
-  marketplaceId Int
+  marketplaceId Int          @map("marketplace_id")
   brand         Brand        @relation(fields: [brandId], references: [id])
-  brandId       Int
+  brandId       Int          @map("brand_id")
+
+  rawCategories String[]     @map("raw_categories")
+
+  categoryId    String?      @map("category_id")   
+  category      Category?    @relation(fields: [categoryId], references: [id])
   
-  sku           String
-  url           String?
-  title         String
-  category      String?
-  reviewsCount  Int          @default(0)
-  rating        Decimal?     @db.Decimal(5, 2)
-  imageUrl      String?
-  createdAt     DateTime     @default(now())
+  sku           String       @map("sku")
+  url           String?      @map("url")
+  title         String       @map("title")
+  reviewsCount  Int          @default(0) @map("reviews_count")
+  rating        Decimal?     @db.Decimal(5, 2) @map("rating")
+  imageUrl      String?      @map("image_url")
+  createdAt     DateTime     @default(now()) @map("created_at")
 
   priceHistory  PriceHistory[]
   reviews       Review[]
@@ -65,17 +69,17 @@ model Product {
 }
 
 model Seller {
-  id            Int         @id @default(autoincrement())
+  id            Int         @id @default(autoincrement()) @map("id")
   marketplace   Marketplace @relation(fields: [marketplaceId], references: [id])
-  marketplaceId Int
+  marketplaceId Int         @map("marketplace_id")
   
-  merchantId    String      // Стабильный ID из URL (напр. 30366938)
-  name          String
-  rating        Decimal?    @db.Decimal(5, 2)
-  reviewsCount  Int         @default(0)
-  phone         String?
-  url           String?
-  createdAt     DateTime    @default(now())
+  merchantId    String      @map("merchant_id") // Стабильный ID из URL (напр. 30366938)
+  name          String      @map("name")
+  rating        Decimal?    @db.Decimal(5, 2) @map("rating")
+  reviewsCount  Int         @default(0) @map("reviews_count")
+  phone         String?     @map("phone")
+  url           String?     @map("url")
+  createdAt     DateTime    @default(now()) @map("created_at")
 
   priceHistory  PriceHistory[]
 
@@ -83,40 +87,58 @@ model Seller {
   @@map("seller")
 }
 
-model PriceHistory {
-  id          Int        @id @default(autoincrement())
-  task        SearchTask @relation(fields: [taskId], references: [id])
-  taskId      Int
-  product     Product    @relation(fields: [productId], references: [id])
-  productId   Int
-  seller      Seller     @relation(fields: [sellerId], references: [id])
-  sellerId    Int
+model Category {
+  id        String     @id @default(uuid()) @map("id")
+  name      String     @map("name")
   
-  price       Decimal    @db.Decimal(12, 2)
-  isAvailable Boolean    @default(true)
-  scannedAt   DateTime   @default(now())
+  parentId  String?    @map("parent_id")
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+  
+  products  Product[]
+
+  @@unique([name, parentId])
+  @@map("categories")
+}
+
+model PriceHistory {
+  id           Int        @id @default(autoincrement()) @map("id")
+  task         SearchTask @relation(fields: [taskId], references: [id])
+  taskId       Int        @map("task_id")
+  product      Product    @relation(fields: [productId], references: [id])
+  productId    Int        @map("product_id")
+  seller       Seller     @relation(fields: [sellerId], references: [id])
+  sellerId     Int        @map("seller_id")
+  
+  price        Decimal    @db.Decimal(12, 2) @map("price")
+  isAvailable  Boolean    @default(true) @map("is_available")
+  scannedAt    DateTime   @default(now()) @map("scanned_at")
+
+  deliveryRaw  String?    @map("delivery_raw") 
+  deliveryDays Int?       @map("delivery_days")
 
   @@map("price_history")
 }
 
 model Review {
-  id          Int      @id @default(autoincrement())
-  product     Product  @relation(fields: [productId], references: [id])
-  productId   Int
+  id          Int       @id @default(autoincrement()) @map("id")
+  product     Product   @relation(fields: [productId], references: [id])
+  productId   Int       @map("product_id")
   
-  authorName  String?
-  rating      Int?
-  content     String?
-  publishedAt DateTime?
-  hasPhotos   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  authorName  String?   @map("author_name")
+  rating      Int?      @map("rating")
+  content     String?   @map("content")
+  publishedAt DateTime? @map("published_at")
+  hasPhotos   Boolean   @default(false) @map("has_photos")
+  createdAt   DateTime  @default(now()) @map("created_at")
 
   @@map("review")
 }
+
 model Role {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String?  
+  id          Int      @id @default(autoincrement()) @map("id")
+  name        String   @unique @map("name")
+  description String?  @map("description")
   users       User[]
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -125,26 +147,26 @@ model Role {
 }
 
 model User {
-  id                  Int                  @id @default(autoincrement())
-  email               String               @unique
-  passwordHash        String               @map("password_hash")
-  name                String?              
-  roleId              Int                  @map("role_id")
-  role                Role                 @relation(fields: [roleId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  id                Int                  @id @default(autoincrement()) @map("id")
+  email             String               @unique @map("email")
+  passwordHash      String               @map("password_hash")
+  name              String?              @map("name")
+  roleId            Int                  @map("role_id")
+  role              Role                 @relation(fields: [roleId], references: [id], onUpdate: Cascade, onDelete: Restrict)
 
-  isVerified        Boolean  @default(false)
-  verificationToken String?  // Токен для ссылки (nullable)
-  refreshTokens       RefreshToken[]
+  isVerified        Boolean              @default(false) @map("is_verified")
+  verificationToken String?              @map("verification_token")
+  refreshTokens     RefreshToken[]
   passwordResetTokens PasswordResetToken[]
-  createdAt           DateTime             @default(now()) @map("created_at")
-  updatedAt           DateTime             @updatedAt @map("updated_at")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
 
   @@map("user")
 }
 
 model RefreshToken {
-  id         Int      @id @default(autoincrement())
-  token      String   @unique
+  id         Int      @id @default(autoincrement()) @map("id")
+  token      String   @unique @map("token")
   userId     Int      @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   deviceInfo String?  @map("device_info")
@@ -155,8 +177,8 @@ model RefreshToken {
 }
 
 model PasswordResetToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique
+  id        Int      @id @default(autoincrement()) @map("id")
+  token     String   @unique @map("token")
   userId    Int      @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime @map("expires_at")

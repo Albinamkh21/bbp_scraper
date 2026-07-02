@@ -38,11 +38,12 @@ class ScrapingDataService {
         brandId: brand.id,
         sku: scrapedData.productId,              // В скрапере это productId
         title: scrapedData.title,
+        rawCategories: scrapedData.rawCategories || [],
+        categoryId: scrapedData.categoryId || null,
         url: `https://kaspi.kz/shop/p/-${scrapedData.productId}/`,
-        category: scrapedData.category,
         reviewsCount: scrapedData.reviewsCount || 0,
-        rating: scrapedData.rating,                            // Скрапер пока не собирает рейтинг товара
-        imageUrl: scrapedData.image              // В скрапере это image
+        rating: scrapedData.rating,                            
+        imageUrl: scrapedData.image           
       }, tx);
 
       // 4. Перебираем продавцов и сохраняем их и цены
@@ -69,7 +70,8 @@ class ScrapingDataService {
             rating: sellerData.rating,       
             reviewsCount: sellerData.reviewsCount || 0,
             url: sellerData.url || null,
-            phone: sellerData.phone || null 
+            phone: sellerData.phone || null ,
+           
           }, tx);
 
           // 4.2 Сохраняем Цену (Price History)
@@ -78,7 +80,8 @@ class ScrapingDataService {
             productId: product.id,
             sellerId: seller.id,
             price: sellerData.price,
-            isAvailable: true
+            isAvailable: true,
+            deliveryInfo: sellerData.deliveryInfo || null
           }, tx);
         }
       }
