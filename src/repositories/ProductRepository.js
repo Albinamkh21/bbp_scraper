@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const CategoryRepository = require('./CategoryRepository');
 const prisma = new PrismaClient();
 
 class ProductRepository {
@@ -50,6 +51,35 @@ class ProductRepository {
         marketplaceId_sku: { marketplaceId, sku }
       }
     });
+  }
+
+  async assignCategoryIdsToProducts(tx = prisma) {
+    const productsWithoutCategory = await tx.product.findMany({
+      where: {
+        OR: [{ categoryId: null }, { categoryId: '' }]
+      },
+      select: {
+        id: true,
+        rawCategories: true
+      }
+    });
+
+    let updatedCount = 0;
+
+    for (const product of productsWithoutCategory) {
+      const categoryPath = CategoryRepository.normalizeCategoryPath(product.rawCategories);
+      const categoryId = await CategoryRepository.ensureCategoryPath(categoryPath, tx);
+
+      if (categoryId) {
+        await tx.product.update({
+          where: { id: product.id },
+          data: { categoryId }
+        });
+        updatedCount += 1;
+      }
+    }
+
+    return updatedCount;
   }
 }
 

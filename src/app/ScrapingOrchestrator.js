@@ -34,11 +34,12 @@ class ScrapingOrchestrator {
    
       await TaskRepository.updateStatus(task.id, 'processing');
 
-      // 2. Запуск браузерной сессии
+   
       const { browser, page } = await this.browserManager.createSession();
       browserInstance = browser; // Сохраняем ссылку для блока finally
 
-      // Поиск ссылок
+ 
+     
       const urls = await this.scraper.search(page, searchQuery, maxItems);
       console.log(`[Orchestrator] Получено ${urls.length} ссылок для обработки.`);
 
@@ -76,6 +77,20 @@ class ScrapingOrchestrator {
             config.scraping.delays.iterationMax
           );
         }
+      }
+
+
+      try {
+        await ScrapingDataService.processUnassignedCategories();
+      } catch (catError) {
+        console.error('[Orchestrator] Ошибка при обработке категорий:', catError.message);
+       
+      }
+      try {
+        await ScrapingDataService.processUnassignedDeliveryInfo();
+      } catch (delError) {
+        console.error('[Orchestrator] Ошибка при обработке информации о доставке:', delError.message);
+       
       }
 
       // 4. Если всё прошло успешно, закрываем задачу статусом "completed"

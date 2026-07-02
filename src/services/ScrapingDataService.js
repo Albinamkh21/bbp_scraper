@@ -6,6 +6,7 @@ const BrandRepository = require('../repositories/BrandRepository');
 const ProductRepository = require('../repositories/ProductRepository');
 const SellerRepository = require('../repositories/SellerRepository');
 const PriceHistoryRepository = require('../repositories/PriceHistoryRepository');
+const CategoryRepository = require('../repositories/CategoryRepository');
 
 class ScrapingDataService {
   /**
@@ -89,6 +90,29 @@ class ScrapingDataService {
       return product;
     });
   }
+  async processUnassignedCategories() {
+    console.log('[ScrapingDataService] Старт обработки категорий...');
+
+    
+    await CategoryRepository.syncCategoriesFromProducts();
+
+    
+    await ProductRepository.assignCategoryIdsToProducts();
+
+    console.log('[ScrapingDataService] Обработка категорий успешно завершена.');
+  }
+
+  async processUnassignedDeliveryInfo() {
+    console.log('[ScrapingDataService] Старт обработки информации о доставке...');
+
+    
+    await PriceHistoryRepository.updateEmptyDeliveryDays();
+
+
+
+    console.log('[ScrapingDataService] Обработка информации о доставке успешно завершена.');
+  }
 }
+
 
 module.exports = new ScrapingDataService();
