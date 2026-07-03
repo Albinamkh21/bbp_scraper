@@ -5,6 +5,7 @@ import { TasksPage } from './features/tasks/TasksPage';
 import { CatalogPage } from './features/catalog/CatalogPage';
 import { ReportPage } from './features/report/ReportPage';
 import { CreateReportPage } from './features/report/CreateReportPage';
+import { CreateTasksPage } from './features/tasks/CreateTasksPage';
 import { AuthPage } from './features/auth/AuthPage';
 import { ForgotPassword } from './features/auth/ForgotPassword';
 import { ResetPassword } from './features/auth/ResetPassword';
@@ -61,6 +62,7 @@ function App() {
   const goToCatalog = () => setPage({ type: 'catalog', prev: page });
   const goToReport = () => setPage({ type: 'report', prev: page });
   const goToCreateReport = () => setPage({ type: 'createReport', prev: page });
+  const goToCreateTask = () => setPage({ type: 'createTask', prev: page });
   const goToTasks = () => setPage({ type: 'list', prev: page });
 
   const goBack = () => {
@@ -108,7 +110,7 @@ function App() {
   return (
     <MainLayout 
       currentPage={page.type} 
-      onMenuClick={(mod) => mod === 'catalog' ? goToCatalog() : (mod === 'report' ? goToReport() : (mod === 'createReport' ? goToCreateReport() : goToTasks()))}
+      onMenuClick={(mod) => mod === 'catalog' ? goToCatalog() : (mod === 'report' ? goToReport() : (mod === 'createReport' ? goToCreateReport() : (mod === 'createTask' ? goToCreateTask() : goToTasks())))}
       user={user}
       onLogout={handleLogout}
     >
@@ -123,6 +125,10 @@ function App() {
 
       {page.type === 'createReport' && (
         <CreateReportPage />
+      )}
+
+      {page.type === 'createTask' && (
+        <CreateTasksPage />
       )}
       
       {page.type === 'list' && (

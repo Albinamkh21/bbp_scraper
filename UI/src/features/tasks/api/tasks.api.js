@@ -9,6 +9,11 @@ export const getTasks = async (params) => {
   return response;
 };
 
+export const createTask = async (payload) => {
+  const { data } = await httpClient.post('/tasks', payload);
+  return data;
+};
+
 // Get products for a specific task
 export const getTaskProducts = async (taskId, params) => {
   const { data } = await httpClient.get(`/history/tasks/${taskId}/products`, { params });

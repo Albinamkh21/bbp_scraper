@@ -7,6 +7,7 @@ export function MainLayout({ children, currentPage, onMenuClick, user, onLogout 
   const isCatalogActive = currentPage === 'catalog';
   const isReportActive = currentPage === 'report';
   const isCreateReportActive = currentPage === 'createReport';
+  const isCreateTaskActive = currentPage === 'createTask';
 
   return (
     <div className="app-minimal">
@@ -43,6 +44,12 @@ export function MainLayout({ children, currentPage, onMenuClick, user, onLogout 
             className={`nav-link-btn ${isCreateReportActive ? 'active' : ''}`}
           >
             ✨ Создать отчёт
+          </button>
+          <button 
+            onClick={() => onMenuClick('createTask')} 
+            className={`nav-link-btn ${isCreateTaskActive ? 'active' : ''}`}
+          >
+            🧩 Создать задачу
           </button>
         </nav>
       </aside>
