@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { createTask as createTaskApi } from './api/tasks.api';
+import { useTaskLogs } from '../../hooks/useTaskLogs';
+import TaskLogsPanel from '../../components/TaskLogsPanel';
 
 const MARKETPLACES = [
   { value: 'Kaspi', label: 'Kaspi' },
@@ -21,6 +23,10 @@ export function CreateTasksPage() {
   });
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState(null);
+
+  // Подключаемся к логам задачи
+  const { logs, setLogs } = useTaskLogs(activeTaskId);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,6 +74,7 @@ export function CreateTasksPage() {
 
     setSubmitting(true);
     setMessage('');
+    setLogs([]); // Очищаем старые логи
 
     try {
       const payload = {
@@ -79,6 +86,7 @@ export function CreateTasksPage() {
 
       const result = await createTaskApi(payload);
       setMessage(`Задача отправлена успешно, taskId: ${result.taskId}`);
+      setActiveTaskId(result.taskId); // Устанавливаем активный taskId для логов
       setForm({ query: '', marketplace: 'Kaspi', searchType: 'query', maxItems: '12' });
     } catch (error) {
       console.error(error);
@@ -169,6 +177,17 @@ export function CreateTasksPage() {
           {message}
         </div>
       )}
+
+      {/* Панель логов в реальном времени */}
+      <TaskLogsPanel
+        activeTaskId={activeTaskId}
+        logs={logs}
+        onClose={() => {
+          setActiveTaskId(null);
+          setLogs([]);
+        }}
+        height={300}
+      />
     </div>
   );
 }

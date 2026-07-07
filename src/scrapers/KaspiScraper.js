@@ -148,7 +148,9 @@ class KaspiScraper extends BaseScraper {
           return null;
       };
 
-      const productId = productUrl.match(/-(\d+)\/?$/)?.[1] || null;
+      //const productId = productUrl.match(/-(\d+)\/?$/)?.[1] || null;
+      const skuText = document.querySelector('.item__sku')?.innerText || '';
+      const productId = skuText.match(/\d+/)?.[0] || null;
       const title = document.querySelector('h1')?.textContent?.trim() || null;
 
 

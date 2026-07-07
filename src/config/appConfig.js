@@ -37,7 +37,20 @@ module.exports = {
       // В продакшене поменяешь на '0 * * * *' (каждый час) или '0 2 * * *' (ночью в 2:00)
       sellerPhones: process.env.SELLER_CRON || '0 /2 * * *',
       sellersPerBatch: 15,
-      requestDelay: 5000
+      requestDelay: 5000,
+      cronTasks: [
+        {
+          id: 'cron-roborock-daily',  // Уникальный ID для Redis
+          cron: '0 10 * * *',          // Каждый день в 10:00 утра
+          data: {
+            query: 'Roborock S8 Pro+',
+            marketplace: 'Kaspi',
+            maxItems: 3,
+            searchType: 'query'
+          }
+        }
+      ]
+
     }
   },
   app: {

@@ -12,7 +12,7 @@ async function initScheduler() {
     
     const cronExpression = config.scraping.schedules.sellerPhones;
     
-    // 1. Получаем все существующие повторяющиеся задачи
+    
     const repeatableJobs = await sellerQueue.getRepeatableJobs();
     
     // 2. Проверяем, есть ли уже задача с таким кроном
