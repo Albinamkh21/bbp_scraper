@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { MainLayout } from './components/Layout/MainLayout';
 import { TasksPage } from './features/tasks/TasksPage';
-import { CatalogPage } from './features/catalog/CatalogPage';
 import { ReportPage } from './features/report/ReportPage';
-import { CreateReportPage } from './features/report/CreateReportPage';
 import { CreateTasksPage } from './features/tasks/CreateTasksPage';
 import { AuthPage } from './features/auth/AuthPage';
 import { ForgotPassword } from './features/auth/ForgotPassword';
@@ -115,17 +113,13 @@ function App() {
       onLogout={handleLogout}
     >
       
-      {page.type === 'catalog' && (
-        <CatalogPage />
-      )}
+     
 
       {page.type === 'report' && (
         <ReportPage />
       )}
 
-      {page.type === 'createReport' && (
-        <CreateReportPage />
-      )}
+    
 
       {page.type === 'createTask' && (
         <CreateTasksPage />

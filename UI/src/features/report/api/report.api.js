@@ -1,45 +1,52 @@
 import { httpClient } from '../../../api/httpClient';
 
-export const getPartners = async () => {
-  const { data } = await httpClient.get('/v1/report/partners');
+/**
+ * Fetch product list for filter dropdowns.
+ * @returns {Promise<Array<{id: number, title: string, sku: string}>>}
+ */
+export const getProducts = async () => {
+  const { data } = await httpClient.get('/catalog/products');
   return data;
 };
 
-export const getRightCategories = async () => {
-  const { data } = await httpClient.get('/v1/report/right_categories');
+/**
+ * Fetch category list for filter dropdowns.
+ * @returns {Promise<Array<{id: string, name: string, parentId: string|null}>>}
+ */
+export const getCategories = async () => {
+  const { data } = await httpClient.get('/catalog/categories');
   return data;
 };
 
-export const getRightUsageTypes = async () => {
-  const { data } = await httpClient.get('/v1/report/right_usage_types');
-  return data;
-};
+/**
+ * Sends a POST request to /reports and triggers a browser file download.
+ * The backend returns a binary buffer with Content-Disposition: attachment.
+ *
+ * @param {{ reportType: string, format: string, filters?: object }} params
+ */
+export const downloadReport = async ({ reportType, format, filters = {} }) => {
+  const response = await httpClient.post(
+    '/reports',
+    { reportType, format, filters },
+    { responseType: 'blob' }
+  );
 
-export const getLabels = async () => {
-  const { data } = await httpClient.get('/v1/report/labels');
-  return data;
-};
+  // Extract filename from Content-Disposition header if present
+  const disposition = response.headers['content-disposition'];
+  let filename = `report_${reportType}_${Date.now()}`;
+  if (disposition) {
+    const match = disposition.match(/filename="?([^";\n]+)"?/);
+    if (match) filename = match[1].trim();
+  }
 
-export const uploadReport = async (formData) => {
-  // use plain axios call to allow multipart/form-data
-  const { data } = await httpClient.post('/v1/report/get_report_data', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return data;
-};
+  const blob = new Blob([response.data], { type: response.headers['content-type'] });
+  const url = URL.createObjectURL(blob);
 
-export const createReport = async (partnerId, year, monthFrom, monthTo, rightCategoryId, rightUsageTypeId, labelIds) => {
-  const formData = new FormData();
-  formData.append('partner_id', partnerId);
-  formData.append('year', year);
-  formData.append('month_from', monthFrom);
-  formData.append('month_to', monthTo);
-  formData.append('right_category_id', rightCategoryId);
-  formData.append('right_usage_type_id', rightUsageTypeId);
-  formData.append('label_ids', labelIds || '');
-  
-  const { data } = await httpClient.post('/v1/report/create_report', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return data;
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
 };

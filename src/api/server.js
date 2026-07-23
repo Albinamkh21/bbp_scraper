@@ -12,6 +12,7 @@ const taskRoutes = require('./routes/tasks');
 const historyRouter = require('./routes/searchHistory');
 const authRouter = require('./routes/auth'); 
 const reportRoutes = require('./routes/reports');
+const catalogRoutes = require('./routes/catalog');
 const { protect } = require('../middlewares/auth.middleware');
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/history', historyRouter);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/catalog', catalogRoutes);
 
 
 
@@ -142,7 +144,7 @@ server.listen(3000, async () => {
     console.log(`[API] Сервер запущен на внутреннем порту 3000 (Хост-порт: ${config.app.port})`);
     try {
         //await initScheduler();
-        await initScrapingScheduler();
+        //await initScrapingScheduler();
     } catch (cronError) {
         console.error('[API ERROR] Не удалось запустить планировщик телефонов:', cronError.message);
     }
