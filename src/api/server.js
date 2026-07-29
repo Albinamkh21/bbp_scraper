@@ -6,13 +6,13 @@ const Redis = require('ioredis');
 const cookieParser = require('cookie-parser'); 
 const config = require('../config/appConfig');
 const { scrapingQueue } = require('../core/QueueClient');
-const { initScheduler } = require('../schedulers/sellerScheduler');
-const { initScrapingScheduler } = require('../schedulers/scrapingScheduler'); 
+const { bootstrapSchedulers } = require('../schedulers/BootstrapScheduler');
 const taskRoutes = require('./routes/tasks');
 const historyRouter = require('./routes/searchHistory');
 const authRouter = require('./routes/auth'); 
 const reportRoutes = require('./routes/reports');
 const catalogRoutes = require('./routes/catalog');
+const scheduleRoutes = require('./routes/schedules');
 const { protect } = require('../middlewares/auth.middleware');
 
 const app = express();
@@ -33,6 +33,7 @@ app.use('/api/history', historyRouter);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/catalog', catalogRoutes);
+app.use('/api/schedules', scheduleRoutes);
 
 
 
@@ -143,9 +144,8 @@ redisSubscriber.on('pmessage', (pattern, channel, message) => {
 server.listen(3000, async () => {
     console.log(`[API] Сервер запущен на внутреннем порту 3000 (Хост-порт: ${config.app.port})`);
     try {
-        //await initScheduler();
-        //await initScrapingScheduler();
+        await bootstrapSchedulers();
     } catch (cronError) {
-        console.error('[API ERROR] Не удалось запустить планировщик телефонов:', cronError.message);
+        console.error('[API ERROR] Не удалось запустить планировщик задач:', cronError.message);
     }
 });

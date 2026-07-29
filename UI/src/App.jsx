@@ -4,6 +4,7 @@ import { MainLayout } from './components/Layout/MainLayout';
 import { TasksPage } from './features/tasks/TasksPage';
 import { ReportPage } from './features/report/ReportPage';
 import { CreateTasksPage } from './features/tasks/CreateTasksPage';
+import { SchedulesPage } from './features/scheduler/SchedulesPage';
 import { AuthPage } from './features/auth/AuthPage';
 import { ForgotPassword } from './features/auth/ForgotPassword';
 import { ResetPassword } from './features/auth/ResetPassword';
@@ -62,6 +63,7 @@ function App() {
   const goToCreateReport = () => setPage({ type: 'createReport', prev: page });
   const goToCreateTask = () => setPage({ type: 'createTask', prev: page });
   const goToTasks = () => setPage({ type: 'list', prev: page });
+  const goToSchedules = () => setPage({ type: 'schedules', prev: page });
 
   const goBack = () => {
     if (page.prev) {
@@ -108,7 +110,7 @@ function App() {
   return (
     <MainLayout 
       currentPage={page.type} 
-      onMenuClick={(mod) => mod === 'catalog' ? goToCatalog() : (mod === 'report' ? goToReport() : (mod === 'createReport' ? goToCreateReport() : (mod === 'createTask' ? goToCreateTask() : goToTasks())))}
+      onMenuClick={(mod) => mod === 'catalog' ? goToCatalog() : (mod === 'report' ? goToReport() : (mod === 'createReport' ? goToCreateReport() : (mod === 'createTask' ? goToCreateTask() : (mod === 'schedules' ? goToSchedules() : goToTasks()))))}
       user={user}
       onLogout={handleLogout}
     >
@@ -127,6 +129,10 @@ function App() {
       
       {page.type === 'list' && (
         <TasksPage onTaskClick={goToTasks} />
+      )}
+
+      {page.type === 'schedules' && (
+        <SchedulesPage />
       )}
 
     </MainLayout>

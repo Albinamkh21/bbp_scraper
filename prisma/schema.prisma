@@ -186,3 +186,20 @@ model PasswordResetToken {
 
   @@map("password_reset_token")
 }
+
+model ScheduledTask {
+  id             Int      @id @default(autoincrement()) @map("id")
+  taskName       String   @map("task_name")
+  // Логическое имя очереди BullMQ: 'scraping' или 'seller' (см. src/core/QueueClient.js)
+  queueName      String   @map("queue_name")
+  // Имя джобы для воркера: 'trigger-scheduled-task' | 'sync-seller-phones'
+  jobType        String   @map("job_type")
+  cronExpression String   @map("cron_expression")
+  isActive       Boolean  @default(true) @map("is_active")
+  // Специфичные для задачи данные (query/maxItems и т.д.), для задач без данных - {}
+  payload        Json     @default("{}") @map("payload")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("scheduled_tasks")
+}
