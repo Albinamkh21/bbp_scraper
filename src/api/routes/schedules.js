@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { getSchedules, updateSchedule, toggleSchedule } = require('../controllers/SchedulerController');
-const { protect } = require('../../middlewares/auth.middleware');
+const { protect, authorize } = require('../../middlewares/auth.middleware');
 
-router.get('/', protect, getSchedules);
-router.put('/:id', protect, updateSchedule);
-router.patch('/:id/toggle', protect, toggleSchedule);
+router.use(protect);
+router.use(authorize('admin'));
+
+router.get('/', getSchedules);
+router.put('/:id', updateSchedule);
+router.patch('/:id/toggle', toggleSchedule);
 
 module.exports = router;

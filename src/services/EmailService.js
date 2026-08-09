@@ -21,7 +21,7 @@ const sendVerificationEmail = async (email, token) => {
     `;
 
     // 1. РЕЖИМ РАЗРАБОТКИ: Сохраняем в папку /logs/emails
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.EMAIL_MODE === 'file') {
         try {
             // Создаем папку, если ее нет (в корне проекта)
             const dir = path.join(__dirname, '../../logs/emails');
@@ -40,7 +40,7 @@ const sendVerificationEmail = async (email, token) => {
     }
 
     // 2. БОЕВОЙ РЕЖИМ: Отправляем через nodemailer (пока просто заготовка)
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.EMAIL_MODE === 'smtp') {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -76,7 +76,7 @@ const sendPasswordResetEmail = async (email, token) => {
         </div>
     `;
 
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.EMAIL_MODE === 'file') {
         try {
             const dir = path.join(__dirname, '../../logs/emails');
             await fs.mkdir(dir, { recursive: true });
@@ -90,7 +90,7 @@ const sendPasswordResetEmail = async (email, token) => {
         }
     }
 
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.EMAIL_MODE === 'smtp') {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {

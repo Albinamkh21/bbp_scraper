@@ -82,7 +82,7 @@ export function ReportPage() {
   const { FiltersComponent } = REPORT_REGISTRY[reportType];
 
   return (
-    <div className="page-container">
+    <div className="page-container report-page">
       <h2 className="page-title">Отчёты</h2>
 
       {/* Вкладки — Frontend Factory: переключают тип отчёта и сбрасывают фильтры */}

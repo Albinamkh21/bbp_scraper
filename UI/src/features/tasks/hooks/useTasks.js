@@ -6,26 +6,37 @@ export const useTasks = () => {
   const [labels, setLabels] = useState([]);
 
   // Fetch tasks (main level)
-  const fetchTasksData = useCallback(async (filters, limit, offset) => {
+  const fetchTasksData = useCallback(async (filters, limit, offset, sortModel = []) => {
     setLoading(true);
     try {
       const params = {};
-      Object.keys(filters).forEach(key => {
-        if (filters[key] !== '') params[key] = filters[key];
-      });
+      if (filters.query) params.query = filters.query;
+      if (filters.status) params.status = filters.status;
+      if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+      if (filters.dateTo) params.dateTo = filters.dateTo;
 
-      const response = await getTasks(params); 
-      
-      const totalHeader = response.headers?.['x-total-count'];
-      const allItems = response.data || [];
-      const total = totalHeader ? parseInt(totalHeader, 10) : allItems.length;
+      const response = await getTasks(params);
+
+      let allItems = response.data || [];
+      const total = allItems.length;
+
+      // Client-side sort (backend returns all rows, we paginate locally)
+      if (sortModel.length > 0) {
+        const { colId, sort } = sortModel[0];
+        allItems = [...allItems].sort((a, b) => {
+          const aVal = a[colId];
+          const bVal = b[colId];
+          if (aVal == null) return sort === 'asc' ? -1 : 1;
+          if (bVal == null) return sort === 'asc' ? 1 : -1;
+          if (aVal < bVal) return sort === 'asc' ? -1 : 1;
+          if (aVal > bVal) return sort === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
 
       const paginatedItems = allItems.slice(offset, offset + limit);
 
-      return {
-        items: paginatedItems,
-        total: total
-      };
+      return { items: paginatedItems, total };
     } catch (err) {
       console.error("Ошибка загрузки задач:", err);
       return { items: [], total: 0 };

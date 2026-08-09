@@ -41,12 +41,16 @@ export function MainLayout({ children, currentPage, onMenuClick, user, onLogout 
             🧩 Создать задачу
           </button>
 
-          <button
-            onClick={() => onMenuClick('schedules')}
-            className={`nav-link-btn ${isSchedulesActive ? 'active' : ''}`}
-          >
-            🕐 Расписание
-          </button>
+          {user?.role === 'ADMIN' && (
+            <button
+              onClick={() => onMenuClick('schedules')}
+              className={`nav-link-btn ${isSchedulesActive ? 'active' : ''}`}
+            >
+              🕐 Расписание
+            </button>
+          )}
+
+       
         </nav>
       </aside>
       

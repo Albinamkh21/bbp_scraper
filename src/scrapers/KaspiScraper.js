@@ -244,7 +244,7 @@ class KaspiScraper extends BaseScraper {
             const prices = text.replace(/\s/g, '').match(/(\d+)₸/g) || [];
             for (const p of prices) {
               const val = parseInt(p.replace('₸', ''), 10);
-              if (val > 10000 && (!price || val > price)) {
+              if (val > 0 && (!price || val > price)) {
                 price = val;
               }
             }
@@ -291,9 +291,16 @@ class KaspiScraper extends BaseScraper {
       });
 
       // Если кликнули, ждем загрузки следующей порции продавцов
-      if (hasNextPage) {
-        await this.delay(1000, 2000); 
+     const firstSellerName = pageSellers[0]?.name || null;
+    if (hasNextPage) {
+      await this.delay(1500, 2500);
+      if (firstSellerName) {
+        await page.waitForFunction((prevName) => {
+          const firstRowName = document.querySelector('tr td a')?.textContent?.trim();
+          return firstRowName && firstRowName !== prevName;
+        }, { timeout: 5000 }, firstSellerName).catch(() => {});
       }
+}
     }
 
     // Собираем всё в итоговый объект

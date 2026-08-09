@@ -1,17 +1,10 @@
 import React from 'react';
 
 export const PRODUCT_FILTERS_DEFAULTS = {
-  category: '',
-  status: 'all',
+  title: '',
 };
 
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'Все' },
-  { value: 'active', label: 'Активные' },
-  { value: 'archived', label: 'Архивные' },
-];
-
-// Инпуты для отчёта PRODUCT_SHORT: выбор категории и статуса товара.
+// Инпуты для отчёта PRODUCT_SHORT: поиск по названию товара (подстрока).
 export default function ProductFilters({ filters, onChange, disabled }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,34 +14,20 @@ export default function ProductFilters({ filters, onChange, disabled }) {
   return (
     <>
       <div className="form-group">
-        <label className="form-label" htmlFor="category">Категория</label>
+        <label className="form-label" htmlFor="title">Название товара</label>
         <input
-          id="category"
-          name="category"
+          id="title"
+          name="title"
           type="text"
           className="form-control"
-          placeholder="Например: Смартфоны"
-          value={filters.category}
+          placeholder="Например: iPhone 15"
+          value={filters.title}
           onChange={handleChange}
           disabled={disabled}
         />
       </div>
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="status">Статус</label>
-        <select
-          id="status"
-          name="status"
-          className="form-control"
-          value={filters.status}
-          onChange={handleChange}
-          disabled={disabled}
-        >
-          {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-      </div>
     </>
   );
 }
+
+

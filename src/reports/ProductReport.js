@@ -5,11 +5,26 @@ const prisma = new PrismaClient();
 
 class ProductReport {
     /**
-     * @param {object} filters - optional filters (currently unused for product_short)
+     * @param {object}   filters
+     * @param {string}   [filters.title]       — подстрока названия товара (регистронезависимо)
+     * @param {string[]} [filters.categoryIds] — IDs категорий; пусто → все
      * @returns {Promise<{ columns: string[], rows: object[] }>}
      */
     async generate(filters = {}) {
+        const { title, categoryIds = [] } = filters;
+
+        const where = {};
+
+        if (title && title.trim()) {
+            where.title = { contains: title.trim(), mode: 'insensitive' };
+        }
+
+        if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+            where.categoryId = { in: categoryIds };
+        }
+
         const products = await prisma.product.findMany({
+            where,
             select: {
                 id: true,
                 title: true,
@@ -32,3 +47,4 @@ class ProductReport {
 }
 
 module.exports = ProductReport;
+

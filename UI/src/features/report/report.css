@@ -53,3 +53,17 @@
 @keyframes report-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Списки товаров/категорий не должны вылезать за пределы карточки ── */
+.report-page select[multiple] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.report-page select[multiple] option {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -29,6 +29,16 @@ httpClient.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.reload();
     }
+    else if (status === 403) {
+
+      
+      // 1. Показываем всплывашку (если есть система тоастов):
+      // toast.error('Доступ запрещен: недостаточно прав');
+      
+      error.userFriendlyMessage = 'У вас нет прав для выполнения этой операции';
+      
+      console.warn('[403 Forbidden] Доступ ограничен ролью пользователя');
+    }
     return Promise.reject(error);
   }
 );

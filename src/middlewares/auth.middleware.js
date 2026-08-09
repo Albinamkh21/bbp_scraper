@@ -31,5 +31,13 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ error: 'Not authorized, no token provided' });
     }
 };
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.map(r => r.toLowerCase()).includes(req.user.role?.toLowerCase())) {
+      return res.status(403).json({ message: 'Доступ запрещен: требуется роль admin' });
+    }
+    next();
+  };
+};
 
-module.exports = { protect };
+module.exports = { protect, authorize };

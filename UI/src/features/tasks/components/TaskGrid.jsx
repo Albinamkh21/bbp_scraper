@@ -84,8 +84,9 @@ export const TaskGrid = ({ fetchTasks, filters, onProductClick, onTaskClick, sea
       getRows: async (rowParams) => {
         const limit = rowParams.endRow - rowParams.startRow;
         const offset = rowParams.startRow;
+        const sortModel = rowParams.sortModel || [];
 
-        const result = await fetchTasks(lastFiltersRef.current, limit, offset);
+        const result = await fetchTasks(lastFiltersRef.current, limit, offset, sortModel);
         rowParams.successCallback(result.items, result.total);
       }
     };
@@ -108,6 +109,7 @@ export const TaskGrid = ({ fetchTasks, filters, onProductClick, onTaskClick, sea
     <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
       <AgGridReact
         columnDefs={columnDefs}
+        defaultColDef={{ sortable: true }}
         rowModelType="infinite"
         pagination={true}
         paginationPageSize={100}

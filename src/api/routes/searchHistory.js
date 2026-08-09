@@ -10,8 +10,14 @@ router.use(protect);
 
 router.get('/tasks', async (req, res, next) => {
     try {
-     
-        const tasks = await TaskRepository.findAll();
+        const { query, status, dateFrom, dateTo } = req.query;
+        const filters = {};
+        if (query) filters.query = query;
+        if (status) filters.status = status;
+        if (dateFrom) filters.dateFrom = dateFrom;
+        if (dateTo) filters.dateTo = dateTo;
+
+        const tasks = await TaskRepository.findAll(filters);
         return res.status(200).json(tasks);
     } catch (error) {
         next(error);

@@ -14,10 +14,10 @@ const getInitialFilters = () => {
     try {
       return JSON.parse(saved);
     } catch {
-      return { name: '', status: '' };
+      return { query: '', status: '', dateFrom: '', dateTo: '' };
     }
   }
-  return { name: '', status: '' };
+  return { query: '', status: '', dateFrom: '', dateTo: '' };
 };
 
 export const TasksPage = ({ onTaskClick }) => {

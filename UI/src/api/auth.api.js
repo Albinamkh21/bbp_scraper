@@ -1,10 +1,10 @@
-import { httpClient } from './httpClient';
+import { httpClient, publicClient } from './httpClient';
 
 export const authAPI = {
-  register: (data) => httpClient.post('/auth/register', data),
-  login: (data) => httpClient.post('/auth/login', data),
-  forgotPassword: (email) => httpClient.post('/auth/forgot-password', { email }),
-  resetPassword: (data) => httpClient.post('/auth/reset-password', data),
+  register: (data) => publicClient.post('/auth/register', data),
+  login: (data) => publicClient.post('/auth/login', data),
+  forgotPassword: (email) => publicClient.post('/auth/forgot-password', { email }),
+  resetPassword: (data) => publicClient.post('/auth/reset-password', data),
   logout: () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
