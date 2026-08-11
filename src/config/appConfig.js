@@ -71,5 +71,7 @@ module.exports = {
     password: process.env.PROXY_PASSWORD || '',
     changeIpUrl: process.env.PROXY_CHANGE_IP_URL || ''
   },
- 
+  kaspi: {
+    cityId: process.env.KASPI_CITY_ID
+  }
 };
