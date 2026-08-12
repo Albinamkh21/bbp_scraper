@@ -2,16 +2,19 @@ require('dotenv').config();
 
 module.exports = {
   browser: {
-    headless: true, 
+    headless: true, // В Docker оставляем true, иначе контейнер упадет без виртуального монитора
     viewport: { width: 1920, height: 1080 },
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    // Ставим версию Chrome 120, так как именно она 100% прошла проверку в твоем curl
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     locale: 'ru-RU',
     timezoneId: 'Asia/Almaty',
     args: [
       '--disable-blink-features=AutomationControlled',
       '--no-sandbox',
-      '--disable-web-security',
-      '--disable-setuid-sandbox'
+      '--disable-setuid-sandbox',
+      '--window-size=1920,1080', // Дублируем размеры окна на уровне аргументов запуска
+      '--disable-infobars',
+     
     ]
   },
   scraping: {
