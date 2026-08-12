@@ -2,8 +2,8 @@ require('dotenv').config();
 
 module.exports = {
   browser: {
-    headless: false, 
-    viewport: { width: 1400, height: 900 },
+    headless: true, 
+    viewport: { width: 1920, height: 1080 },
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     locale: 'ru-RU',
     timezoneId: 'Asia/Almaty',
@@ -25,8 +25,8 @@ module.exports = {
       selector: 30000
     },
     delays: {
-      searchMin: 2000,
-      searchMax: 5000,
+      searchMin: 1500,
+      searchMax: 3000,
       productMin: 1500,
       productMax: 3000,
       iterationMin: 1000,

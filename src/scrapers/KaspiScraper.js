@@ -10,6 +10,14 @@ class KaspiScraper extends BaseScraper {
   async search(page, query, maxItems = 100) {
     console.log('[KaspiScraper] Открытие главной страницы Kaspi...');
 
+    await page.route('**/*', (route) => {
+      const resourceType = route.request().resourceType();
+      if (['image', 'font', 'media'].includes(resourceType)) {
+        return route.abort();
+      }
+      return route.continue();
+    });
+
     await page.goto(config.scraping.baseUrl, {
       waitUntil: 'domcontentloaded',
       timeout: config.scraping.timeouts.navigation
@@ -128,6 +136,15 @@ class KaspiScraper extends BaseScraper {
 
   async parseProduct(page, url) {
     await this.delay(config.scraping.delays.productMin, config.scraping.delays.productMax);
+
+    await page.route('**/*', (route) => {
+      const resourceType = route.request().resourceType();
+      if (['image', 'font', 'media'].includes(resourceType)) {
+        return route.abort();
+      }
+      return route.continue();
+    });
+    
     await page.goto(url, { 
       waitUntil: 'domcontentloaded', 
       timeout: config.scraping.timeouts.navigation 
@@ -135,6 +152,13 @@ class KaspiScraper extends BaseScraper {
     
     await page.waitForSelector('h1', { timeout: config.scraping.timeouts.selector });
     await this.delay(config.scraping.delays.productMin, config.scraping.delays.productMax);
+
+    await page.evaluate(() => window.scrollBy(0, 600));
+    try {
+      await page.waitForSelector('table tr, .sellers-table__row', { timeout: 15000 });
+    } catch (e) {
+      console.log(`[KaspiScraper] Таблица продавцов не догрузилась.`);
+    }
 
    
     const baseData = await page.evaluate((productUrl) => {
